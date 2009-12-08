@@ -33,6 +33,11 @@ sub serialize {
     push( @out, $self->length_as_string(scalar(@$list)));
 
     foreach my $element ( @$list ) {
+        
+        if (ref $element eq 'ARRAY') {
+            $element = $self->serialize($element);
+        }
+
         push( @out, $self->length_as_string(length($element)));
         push( @out, "$element:");
     }

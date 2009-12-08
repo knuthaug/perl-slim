@@ -24,4 +24,10 @@ sub can_serialize_two_item_list : Test(1) {
     is( $serializer->serialize(["hello", "world"]), "[000002:000005:hello:000005:world:]", "two item array encodes both with length" );
 }
 
+
+sub can_serialize_nested_list : Test(1) {
+    is( $serializer->serialize( [["element"]]), "[000001:000024:[000001:000007:element:]:]", 
+      "nested arrays creates nested response");
+}
+
 1;
