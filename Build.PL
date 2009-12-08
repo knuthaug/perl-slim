@@ -11,12 +11,14 @@ my $build = Module::Build->new(
                                                   'Test::Class'   => '>= 0.30',
                                                   'Pod::Coverage' => '>= 0.20', 
                                                   'Devel::Cover'  => '>= 0.65', 
+                                                  'Test::Exception' => '>= 0.27',
                                                  },
                                requires => { 
                                             'Net::Server'          => '>= 0.01',
                                             'Moose'                => ">= 0.90",
                                             'namespace::autoclean' => '>= 0.09', 
                                             'Text::CharWidth'      => '>= 0.04',
+                                            'Exception::Class'     => '>= 1.29', 
                                            },
                                
                               );
