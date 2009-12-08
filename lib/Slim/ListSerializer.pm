@@ -2,6 +2,8 @@ package Slim::ListSerializer;
 
 use Moose;
 use namespace::autoclean;
+use Text::CharWidth qw(mbswidth);
+use Encode;
 
 =pod
 
@@ -40,18 +42,14 @@ serialize list structures to string format
 sub serialize {
 
     my ($self, $list) = @_;
-
     my @out = ($self->start_str());
-    push( @out, $self->length_as_string(scalar(@$list)));
-
-    foreach my $element ( @$list ) {
-        $element = $self->serialize($element) if ref $element eq 'ARRAY';
-        push( @out, $self->length_as_string(length($element)));
-        push( @out, "$element:");
-    }
-   
+    
+    push(@out, $self->encode_length( scalar(@$list)) );
+    push(@out, $self->process_elements($list));
     push(@out, $self->end_str());
+
     return join("", @out);
+
 }
 
 
@@ -59,7 +57,21 @@ sub serialize {
 
 =cut
 
-sub length_as_string{
+sub process_elements {
+    my($self, $list) = @_;
+
+    my @out;
+    foreach my $element ( @$list ) {
+        $element = 'null' unless defined $element;
+        $element = $self->serialize($element) if ref $element eq 'ARRAY';
+        push(@out, $self->encode_length( mbswidth($element)));
+        push(@out, "$element:");
+    }
+    return join("", @out);
+   
+}
+
+sub encode_length {
     my($self, $length) = @_;
     return sprintf("%06d:", $length);
 }
