@@ -15,6 +15,18 @@ Knut Haugen <knuthaug@gmail.com>
 
 =cut
 
+has 'start_str' => (
+                    is => 'ro', 
+                    default => '[',
+                    isa => 'Str',
+                   );
+
+has 'end_str' => (
+                  is => 'ro', 
+                  default => ']',
+                  isa => 'Str',
+                 );
+
 =head1 Public API
 
 =over 4
@@ -29,20 +41,16 @@ sub serialize {
 
     my ($self, $list) = @_;
 
-    my @out = ("[");
+    my @out = ($self->start_str());
     push( @out, $self->length_as_string(scalar(@$list)));
 
     foreach my $element ( @$list ) {
-        
-        if (ref $element eq 'ARRAY') {
-            $element = $self->serialize($element);
-        }
-
+        $element = $self->serialize($element) if ref $element eq 'ARRAY';
         push( @out, $self->length_as_string(length($element)));
         push( @out, "$element:");
     }
    
-    push(@out, "]");
+    push(@out, $self->end_str());
     return join("", @out);
 }
 
