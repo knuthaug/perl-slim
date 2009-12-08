@@ -9,7 +9,7 @@ use Encode;
 
 =head1 NAME 
 
-Serialization of list datastructures
+Slim::ListSerializer - Serialization of list datastructures
 
 =head1 Author
 
@@ -51,7 +51,6 @@ sub serialize {
     return join("", @out);
 
 }
-
 
 =back
 
