@@ -16,7 +16,12 @@ sub can_serialize_empty_list : Test(1) {
 
 
 sub can_serialize_one_item_list : Test(1) {
-    is( $serializer->serialize(["hello"]), "[000001:000005:]", "one item array array gives string list with length encoding" );
+    is( $serializer->serialize(["hello"]), "[000001:000005:hello:]", "one item array array gives string list with length encoding" );
+}
+
+
+sub can_serialize_two_item_list : Test(1) {
+    is( $serializer->serialize(["hello", "world"]), "[000002:000005:hello:000005:world:]", "two item array encodes both with length" );
 }
 
 1;
