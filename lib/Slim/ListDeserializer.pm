@@ -38,10 +38,13 @@ deserialize string representation to list structure.
 sub deserialize {
     my($self, $string) = @_;
 
+    #REFACTOR
     if (!$string || $string !~ /^\[/ || $string !~ /\]$/) {
         throw Slim::SyntaxError("null not allowed");
     } 
-    return $self->deserialize_string(split(//, $string));    
+
+    $self->{'chars'} = [split(//, $string)];
+    return $self->deserialize_string();    
 }
 
 
@@ -51,26 +54,42 @@ sub deserialize {
 
 
 sub deserialize_string {
-    my($self, @chars) = @_;
+    my($self) = @_;
 
-    my $num_elements = $self->get_length(@chars);
+    $self->current_position(1);
 
-    foreach (0..$num_elements) {
-        
+    my $num_elements = $self->get_length;
+    my @return_list = ();
+
+    if ($num_elements == 0) {
+        return @return_list;
     }
 
-    if ( $num_elements > 0) {
-        return ["foo"];
+
+    foreach (1..$num_elements) {
+        my $element_length = $self->get_length;
+        my $element = join("", @{$self->{'chars'}}[$self->current_position()..($self->current_position() + $element_length) - 1]);
+        $self->current_position($self->current_position + $element_length + 1);
+
+        if ($element =~ /^\[/) {
+            $self->current_position($self->current_position() + 1);
+            my @nested_elements = new Slim::ListDeserializer->deserialize($element); 
+            push(@return_list, \@nested_elements);
+            $self->current_position($self->current_position() - 1);
+        }
+        else {
+            push(@return_list, $element);    
+        }
     }
-    return [];
+    return @return_list;
       
 }
 
 
 sub get_length {
-    my($self, @chars) = @_;
-    my $value = join("", @chars[$self->current_position..$self->current_position + ($ENC_LENGTH - 1)]);
-    $self->current_position( $self->current_position + ($ENC_LENGTH + 1));
+    my($self) = @_;
+    my $value = join("", @{$self->{'chars'}}[$self->current_position()..$self->current_position() + ($ENC_LENGTH - 1)]);
+    $self->current_position( $self->current_position() + ($ENC_LENGTH + 1));
     return $value + 0;
 }
 
