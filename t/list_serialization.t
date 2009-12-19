@@ -1,6 +1,6 @@
 #!perl
 
 use lib "t/lib";
-use Test::Slim::ListSerializer;
+use Test::Slim::ListSerialization;
 
 Test::Class->runtests();
