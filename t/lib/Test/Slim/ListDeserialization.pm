@@ -44,5 +44,9 @@ sub can_deserialize_a_nested_lists : Test(1) {
       compare_lists(@list);
 }
 
+sub can_deserialize_lists_with_multibyte_strings : Test(1) {
+    my @list = ("Köln");
+    compare_lists(@list);
+}
 
 1;
