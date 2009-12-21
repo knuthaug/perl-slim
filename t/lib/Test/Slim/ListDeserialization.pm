@@ -49,4 +49,14 @@ sub can_deserialize_lists_with_multibyte_strings : Test(1) {
     compare_lists(@list);
 }
 
+sub can_deserialize_list_with_element_ending_in_multibyte_char : Test(1) {
+    my @list = ("Kö");
+    compare_lists(@list);
+}
+
+sub can_deserialize_lists_with_utf8_strings : Test(1) {
+    my @list = ("123456789012345", "Español");
+    compare_lists(@list);
+}
+
 1;
