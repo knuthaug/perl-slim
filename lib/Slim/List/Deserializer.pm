@@ -98,29 +98,60 @@ sub handle_nested_lists {
 }
 
 
+sub timeout {
+    die "Timeout in reading string";
+}
+
+
 sub get_multibyte_element{
     my($self, $element_length) = @_;
  
     #refactor
+    (my $element, $element_length) = $self->read_element($element_length);
+    
+    #refactor
+    throw Slim::SyntaxError("List Termination Character Not found in" . 
+                           join("", @{$self->chars()}[$self->position .. ($self->position + $element_length)]))  unless (join("", @{$self->chars()}[($self->position + $element_length) .. ($self->position + $element_length)]) eq ':');
+    $self->position($self->position + $element_length + 1);
+    
+    return $element;
+}
+
+
+sub read_element {
+    my($self, $element_length) = @_;
+    
     my $length_in_bytes = $element_length;
     my $element = $self->get_char_slice($length_in_bytes);        
 
-    do {
-        $length_in_bytes++;
-        $element = $self->get_char_slice($length_in_bytes);
-    } until (mbswidth($element) > $element_length);
-    
+    $SIG{ALRM} = \&timeout;
+
+    eval {
+        alarm (1);
+
+        do {
+            $length_in_bytes++;
+            $element = $self->get_char_slice($length_in_bytes);
+        } until (mbswidth($element) > $element_length);
+
+        alarm(0);
+    };
+
+    if ($@ =~ /Timeout in reading string/) {
+        throw Slim::SyntaxError("Multibyte characters detected in string");
+    }
+
     $length_in_bytes--;
-    $element = $self->get_char_slice($length_in_bytes);
-    
-    $self->position($self->position + $element_length + 1);
-    return $element;
+    return ($self->get_char_slice($length_in_bytes), $length_in_bytes);
+
+
 }
 
 sub get_char_slice{
     my($self, $length) = @_;
     return join("", @{$self->chars()}[$self->position .. ($self->position + $length) - 1]);
 }
+
 
 sub get_length {
     my($self) = @_;
