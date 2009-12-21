@@ -59,4 +59,5 @@ sub can_deserialize_lists_with_utf8_strings : Test(1) {
     compare_lists(@list);
 }
 
+
 1;
