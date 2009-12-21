@@ -19,10 +19,10 @@ Knut Haugen <knuthaug@gmail.com>
 =cut
 
 has 'position' => (
-                           is => 'rw', 
-                           default => 1,
-                           isa => 'Int',
-                   );
+                   is => 'rw', 
+                   default => 1,
+                   isa => 'Int',
+                  );
 
 
 has 'chars' => (
@@ -46,7 +46,6 @@ deserialize string representation to list structure.
 sub deserialize {
     my($self, $string) = @_;
 
-    #REFACTOR
     throw Slim::SyntaxError("null strings not allowed") if !$string;
     throw Slim::SyntaxError("String is not started with [ character") if $string !~ /^\[/;
     throw Slim::SyntaxError("String does not end in ] character") if $string !~ /\]$/;
@@ -65,56 +64,62 @@ sub deserialize_string {
     my($self) = @_;
 
     $self->position(1);
-
     my $num_elements = $self->get_length;
 
-    if ($num_elements == 0) {
-        return ();
-    }
-
+    return () if ($num_elements == 0);
     return $self->serialize_elements($num_elements);
 }
 
 
-sub serialize_elements{
+sub serialize_elements {
     my($self, $num_elements) = @_;
     my @return_list = ();
 
     foreach (1..$num_elements) {
         my $element_length = $self->get_length;
-        my $element = $self->fetch_multibyte_element($element_length);
-
-        if ($element =~ /^\[/) {
-            #refactor
-            $self->position($self->position + 1);
-            my @nested_elements = new Slim::List::Deserializer->deserialize($element); 
-            push(@return_list, \@nested_elements);
-            $self->position($self->position - 1);
-        }
-        else {
-            push(@return_list, $element);    
-        }
+        my $element = $self->get_multibyte_element($element_length);
+        push(@return_list, $self->handle_nested_lists($element));    
     }
     return @return_list;
     
 }
 
 
-sub fetch_multibyte_element{
+sub handle_nested_lists {
+    my($self, $element) = @_;
+    
+    if ($element =~ /^\[/) {
+        $self->position($self->position + 1);
+        my @nested_elements = new Slim::List::Deserializer->deserialize($element); 
+        $self->position($self->position - 1);
+        return \@nested_elements;
+    }
+    return $element;
+}
+
+
+sub get_multibyte_element{
     my($self, $element_length) = @_;
+ 
+    #refactor
     my $length_in_bytes = $element_length;
-    my $element = join("", @{$self->chars}[$self->position .. ($self->position + $length_in_bytes) - 1]);        
+    my $element = $self->get_char_slice($length_in_bytes);        
 
     do {
         $length_in_bytes++;
-        $element = join("", @{$self->chars()}[$self->position .. ($self->position + $length_in_bytes) - 1]);
+        $element = $self->get_char_slice($length_in_bytes);
     } until (mbswidth($element) > $element_length);
     
     $length_in_bytes--;
-    $element = join("", @{$self->chars()}[$self->position..($self->position + $length_in_bytes) - 1]);   
+    $element = $self->get_char_slice($length_in_bytes);
     
     $self->position($self->position + $element_length + 1);
     return $element;
+}
+
+sub get_char_slice{
+    my($self, $length) = @_;
+    return join("", @{$self->chars()}[$self->position .. ($self->position + $length) - 1]);
 }
 
 sub get_length {

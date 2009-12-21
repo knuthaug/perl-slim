@@ -4,13 +4,13 @@ use base qw(Test::Class);
 use Test::More;
 use Test::Exception;
 
-use Slim::ListDeserializer;
-use Slim::ListSerializer;
+use Slim::List::Deserializer;
+use Slim::List::Serializer;
 
 my $deserializer;
 
 sub setup_fixture : Test(setup) {
-    $deserializer = new Slim::ListDeserializer();
+    $deserializer = new Slim::List::Deserializer();
 }
 
 
