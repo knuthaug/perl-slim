@@ -10,7 +10,7 @@ use Text::CharWidth qw(mbswidth);
 
 =head1 NAME 
 
-Slim::ListDeserializer - Deserialization of strings
+Slim::List::Deserializer - Deserialization of strings
 
 =head1 Author
 
@@ -50,7 +50,7 @@ sub deserialize {
     throw Slim::SyntaxError("String is not started with [ character") if $string !~ /^\[/;
     throw Slim::SyntaxError("String does not end in ] character") if $string !~ /\]$/;
 
-    $self->chars( [split(//, $string) ] );
+    $self->chars( [split(//, $string)] );
     return $self->deserialize_string;    
 }
 
@@ -80,6 +80,7 @@ sub serialize_elements {
         my $element = $self->get_multibyte_element($element_length);
         push(@return_list, $self->handle_nested_lists($element));    
     }
+
     return @return_list;
     
 }
@@ -106,7 +107,6 @@ sub timeout {
 sub get_multibyte_element{
     my($self, $element_length) = @_;
  
-    #refactor
     (my $element, $element_length) = $self->read_element($element_length);
     
     #refactor
@@ -155,7 +155,7 @@ sub get_char_slice{
 
 sub get_length {
     my($self) = @_;
-    my $value = join("", @{$self->chars}[$self->position .. $self->position + ($ENC_LENGTH - 1)]);
+    my $value = $self->get_char_slice($ENC_LENGTH);
     $self->position( $self->position + ($ENC_LENGTH + 1));
     return $value + 0;
 }
