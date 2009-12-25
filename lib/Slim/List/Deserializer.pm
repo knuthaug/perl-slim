@@ -5,6 +5,7 @@ use namespace::autoclean;
 use Error;
 use Slim::SyntaxError;
 use Text::CharWidth qw(mbswidth);
+use Time::HiRes qw(alarm);
 
 =pod
 
@@ -32,6 +33,7 @@ has 'chars' => (
 
 
 our $ENC_LENGTH = 6;
+our $TIMEOUT = 1.0;
 
 =head1 Public API
 
@@ -127,7 +129,7 @@ sub read_element {
     $SIG{ALRM} = \&timeout;
 
     eval {
-        alarm (1);
+        alarm ($TIMEOUT);
 
         do {
             $length_in_bytes++;
