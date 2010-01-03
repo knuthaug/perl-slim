@@ -5,12 +5,13 @@ use namespace::autoclean;
 use Error;
 use Slim::SyntaxError;
 use Text::CharWidth qw(mbswidth);
+use Time::HiRes qw(alarm);
 
 =pod
 
 =head1 NAME 
 
-Slim::ListDeserializer - Deserialization of strings
+Slim::List::Deserializer - Deserialization of strings
 
 =head1 Author
 
@@ -32,6 +33,7 @@ has 'chars' => (
 
 
 our $ENC_LENGTH = 6;
+our $TIMEOUT = 1.0;
 
 =head1 Public API
 
@@ -50,7 +52,7 @@ sub deserialize {
     throw Slim::SyntaxError("String is not started with [ character") if $string !~ /^\[/;
     throw Slim::SyntaxError("String does not end in ] character") if $string !~ /\]$/;
 
-    $self->chars( [split(//, $string) ] );
+    $self->chars( [split(//, $string)] );
     return $self->deserialize_string;    
 }
 
@@ -80,6 +82,7 @@ sub serialize_elements {
         my $element = $self->get_multibyte_element($element_length);
         push(@return_list, $self->handle_nested_lists($element));    
     }
+
     return @return_list;
     
 }
@@ -98,23 +101,52 @@ sub handle_nested_lists {
 }
 
 
+sub timeout {
+    die "Timeout in reading string";
+}
+
+
 sub get_multibyte_element{
     my($self, $element_length) = @_;
  
+    (my $element, $element_length) = $self->read_element($element_length);
+    
     #refactor
+    throw Slim::SyntaxError("List Termination Character Not found in" . 
+                           join("", @{$self->chars()}[$self->position .. ($self->position + $element_length)]))  unless (join("", @{$self->chars()}[($self->position + $element_length) .. ($self->position + $element_length)]) eq ':');
+    $self->position($self->position + $element_length + 1);
+    
+    return $element;
+}
+
+
+sub read_element {
+    my($self, $element_length) = @_;
+    
     my $length_in_bytes = $element_length;
     my $element = $self->get_char_slice($length_in_bytes);        
 
-    do {
-        $length_in_bytes++;
-        $element = $self->get_char_slice($length_in_bytes);
-    } until (mbswidth($element) > $element_length);
-    
+    $SIG{ALRM} = \&timeout;
+
+    eval {
+        alarm ($TIMEOUT);
+
+        do {
+            $length_in_bytes++;
+            $element = $self->get_char_slice($length_in_bytes);
+        } until (mbswidth($element) > $element_length);
+
+        alarm(0);
+    };
+
+    if ($@ =~ /Timeout in reading string/) {
+        throw Slim::SyntaxError("Multibyte characters detected in string");
+    }
+
     $length_in_bytes--;
-    $element = $self->get_char_slice($length_in_bytes);
-    
-    $self->position($self->position + $element_length + 1);
-    return $element;
+    return ($self->get_char_slice($length_in_bytes), $length_in_bytes);
+
+
 }
 
 sub get_char_slice{
@@ -122,9 +154,10 @@ sub get_char_slice{
     return join("", @{$self->chars()}[$self->position .. ($self->position + $length) - 1]);
 }
 
+
 sub get_length {
     my($self) = @_;
-    my $value = join("", @{$self->chars}[$self->position .. $self->position + ($ENC_LENGTH - 1)]);
+    my $value = $self->get_char_slice($ENC_LENGTH);
     $self->position( $self->position + ($ENC_LENGTH + 1));
     return $value + 0;
 }
