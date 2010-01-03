@@ -34,7 +34,7 @@ sub throws_exception_when_deserializing_string_that_doesnt_start_with_open_brack
 
 sub throws_exception_when_deserializing_string_that_doesnt_end_with_close_bracket : Test(1) {
     throws_ok { $deserializer->deserialize("[foo") } 'Slim::SyntaxError', 
-      "string not starting in open bracket";
+      "string not starting with open bracket";
 }
 
 #sub must_throw_exception_when_string_contains_extended_ascii : Test(1) {
