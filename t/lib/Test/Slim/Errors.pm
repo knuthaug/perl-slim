@@ -37,7 +37,12 @@ sub throws_exception_when_deserializing_string_that_doesnt_end_with_close_bracke
       "string not starting with open bracket";
 }
 
-sub must_throw_exception_when_string_contains_extended_ascii : Test(1) {
+sub throws_exception_missing_string_boundary_char : Test(1) {
+    throws_ok { $deserializer->deserialize("[000001:000005:hello]") } 'Slim::SyntaxError', 
+      "missing string termination character";
+}
+
+sub throw_exception_when_string_contains_extended_ascii : Test(1) {
 
     {
         $Slim::List::Deserializer::TIMEOUT = 0.001;

@@ -48,7 +48,7 @@ sub serialize {
     push(@out, $self->process_elements(@list));
     push(@out, $self->end_str());
 
-    return join("", @out);
+    join "", @out;
 
 }
 
@@ -66,13 +66,14 @@ sub process_elements {
         push(@out, $self->encode_length( mbswidth($element)));
         push(@out, "$element:");
     }
-    return join("", @out);
+
+    join "", @out;
    
 }
 
 sub encode_length {
     my($self, $length) = @_;
-    return sprintf("%06d:", $length);
+    sprintf("%06d:", $length);
 }
 
 no Moose;

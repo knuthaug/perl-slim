@@ -52,8 +52,8 @@ sub deserialize {
     throw Slim::SyntaxError("String is not started with [ character") if $string !~ /^\[/;
     throw Slim::SyntaxError("String does not end in ] character") if $string !~ /\]$/;
 
-    $self->chars( [split(//, $string)] );
-    return $self->deserialize_string;    
+    $self->chars([split //, $string ]);
+    $self->deserialize_string;    
 }
 
 
@@ -69,7 +69,7 @@ sub deserialize_string {
     my $num_elements = $self->get_length;
 
     return () if ($num_elements == 0);
-    return $self->serialize_elements($num_elements);
+    $self->serialize_elements($num_elements);
 }
 
 
@@ -83,7 +83,7 @@ sub serialize_elements {
         push(@return_list, $self->handle_nested_lists($element));    
     }
 
-    return @return_list;
+    @return_list;
     
 }
 
@@ -97,7 +97,8 @@ sub handle_nested_lists {
         $self->position($self->position - 1);
         return \@nested_elements;
     }
-    return $element;
+    
+    $element;
 }
 
 
@@ -111,21 +112,38 @@ sub get_multibyte_element{
  
     (my $element, $element_length) = $self->read_element($element_length);
     
-    #refactor
-    throw Slim::SyntaxError("List Termination Character Not found in" . 
-                           join("", @{$self->chars()}[$self->position .. ($self->position + $element_length)]))  unless (join("", @{$self->chars()}[($self->position + $element_length) .. ($self->position + $element_length)]) eq ':');
+    my $check_pos = $self->position + $element_length;
+    my $char = join("", @{$self->chars()}[ $check_pos .. $check_pos ]);
+
+    unless ( $char eq ':') {
+        throw Slim::SyntaxError("List Termination Character Not found in " . 
+                                $self->get_char_slice($element_length+1));
+    }
+
     $self->position($self->position + $element_length + 1);
     
-    return $element;
+    $element;
 }
 
 
 sub read_element {
     my($self, $element_length) = @_;
     
-    my $length_in_bytes = $element_length;
-    my $element = $self->get_char_slice($length_in_bytes);        
+    my $length_in_bytes = 0;
+    my $element = $self->get_char_slice($element_length);        
+    
+    ($length_in_bytes, $element) = $self->read_with_timeout($element_length);
 
+    $length_in_bytes--;
+    ($self->get_char_slice($length_in_bytes), $length_in_bytes);
+
+}
+
+sub read_with_timeout {
+
+    my($self, $element_length) = @_;
+    my $length_in_bytes = $element_length;
+    my $element = "";
     $SIG{ALRM} = \&timeout;
 
     eval {
@@ -143,8 +161,7 @@ sub read_element {
         throw Slim::SyntaxError("Multibyte characters detected in string");
     }
 
-    $length_in_bytes--;
-    return ($self->get_char_slice($length_in_bytes), $length_in_bytes);
+    ($length_in_bytes, $element);
 
 
 }
@@ -159,7 +176,8 @@ sub get_length {
     my($self) = @_;
     my $value = $self->get_char_slice($ENC_LENGTH);
     $self->position( $self->position + ($ENC_LENGTH + 1));
-    return $value + 0;
+
+    $value + 0;
 }
 
 no Moose;
