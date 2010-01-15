@@ -1,5 +1,7 @@
 package Test::Slim::ListSerialization;
 
+use strict;
+use warnings;
 use base qw(Test::Class);
 use Test::More;
 use Slim::List::Serializer;

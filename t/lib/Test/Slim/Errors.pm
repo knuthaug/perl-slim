@@ -1,5 +1,8 @@
 package Test::Slim::Errors;
 
+use strict;
+use warnings;
+
 use base qw(Test::Class);
 use Test::More;
 use Test::Exception;
