@@ -19,6 +19,7 @@ my $build = Module::Build->new(
                                             'namespace::autoclean' => '>= 0.09', 
                                             'Text::CharWidth'      => '>= 0.04',
                                             'Exception::Class'     => '>= 1.29', 
+                                            'threads'              => '>= 1.20', 
                                            },
                                
                               );
