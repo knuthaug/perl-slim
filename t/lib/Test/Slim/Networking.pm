@@ -26,11 +26,6 @@ sub setup_fixture : Test(setup) {
     $connections = 0;
 }
 
-#sub can_run_the_server : Test(1) {
-    #is(1, $server->run, "Run returns (fake) 1")
-#}
-
-
 #socket tests
 
 sub can_handle_one_connection : Test(1) {
@@ -42,7 +37,7 @@ sub can_handle_one_connection : Test(1) {
 }
 
 
-sub can_handle_many_connections : Test(1) {
+sub can_handle_many_connections : Test(2) {
     $socket_handler->handle( sub { $connections += 1;  } );
 
     foreach (1..10) {
@@ -52,7 +47,7 @@ sub can_handle_many_connections : Test(1) {
     $socket_handler->close_all;
 
     is($connections, 10, "10 connections after close");
-    
+    is($socket_handler->pending, 0, "no pending sessions");
 }
 
 sub connect_socket {

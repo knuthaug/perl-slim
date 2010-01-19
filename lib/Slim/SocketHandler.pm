@@ -16,18 +16,24 @@ has 'port' => (
               );
 
 has 'action' => (
-               is => 'rw', 
-               isa => 'CodeRef',
-              );
+                 is => 'rw', 
+                 isa => 'CodeRef',
+                );
 
 has 'listener_thread' => (
-               is => 'rw', 
-               isa => 'Object',
-              );
+                          is => 'rw', 
+                          isa => 'Object',
+                         );
 
 has 'socket' => (
-               is => 'rw', 
-               isa => 'IO::Socket',
+                 is => 'rw', 
+                 isa => 'IO::Socket',
+                );
+
+has 'pending' => (
+                  is => 'rw', 
+                  isa => 'Int',
+                  default => 0,
               );
 
 
@@ -65,7 +71,7 @@ sub handle {
 sub close_all {
     my($self) = @_;
     
-    shutdown($self->socket, 2);
+    $self->socket->shutdown(2);
     foreach my $thread (threads->list()) {
         $thread->join();
     }
@@ -94,7 +100,7 @@ sub handle_connection {
     #while (<$connection>) {
     #    print STDERR "got: " . $_;
     #}
-    close($connection);
+    $connection->close;
     return $return;
     
 }
@@ -107,7 +113,7 @@ sub open_socket {
                                        Listen    => 1,
                                        Type      => SOCK_STREAM,
                                        Proto     => 'tcp', 
-                                      Blocking => 1)
+                                       Blocking  => 1)
       or confess "Couldn't create a tcp server on port " . $self->port() . " : $@\n";
     return $socket;
     
