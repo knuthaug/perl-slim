@@ -30,11 +30,6 @@ has 'socket' => (
                  isa => 'IO::Socket',
                 );
 
-has 'pending' => (
-                  is => 'rw', 
-                  isa => 'Int',
-                  default => 0,
-              );
 
 
 =pod
@@ -67,6 +62,10 @@ sub handle {
     $self->listener_thread(threads->create( 'listen', $self));
 }
 
+sub pending_sessions {
+    my ($self) = @_;
+    return scalar threads->list();
+}
 
 sub close_all {
     my($self) = @_;
@@ -95,11 +94,7 @@ sub listen {
 
 sub handle_connection {
     my($self, $connection) = @_;
-    my $return = $self->action->($connection);
-
-    #while (<$connection>) {
-    #    print STDERR "got: " . $_;
-    #}
+    my $return = $self->action->($self, $connection);
     $connection->close;
     return $return;
     
